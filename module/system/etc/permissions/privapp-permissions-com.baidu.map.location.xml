@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  百度网络定位 (com.baidu.map.location) priv-app 特权白名单
+  只列出真正属于 privileged 级别的权限，避免刷入后 logcat 报
+  "Ignoring permission which is not privileged" 之类的告警。
+-->
+<permissions>
+    <privapp-permissions package="com.baidu.map.location">
+        <!-- 注册为网络定位提供者（Network Location Provider）的关键权限 -->
+        <permission name="android.permission.INSTALL_LOCATION_PROVIDER" />
+        <!-- 读写系统设置，用于定位相关配置 -->
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+        <!-- 跨用户访问（工作资料 / 多用户场景） -->
+        <permission name="android.permission.INTERACT_ACROSS_USERS" />
+    </privapp-permissions>
+</permissions>

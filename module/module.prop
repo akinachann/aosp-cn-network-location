@@ -1,0 +1,6 @@
+id=baidu_network_location
+name=百度网络定位（系统应用）
+version=v5.2.0-r7
+versionCode=5207
+author=akinachan
+description=将 com.baidu.map.location 5.2.0 安装为 /system/priv-app 系统应用，并写入 privapp-permissions 白名单，使其获得 INSTALL_LOCATION_PROVIDER 特权，可作为网络定位提供者（Network Location Provider）使用。Android 9+ 无需再手动授权。

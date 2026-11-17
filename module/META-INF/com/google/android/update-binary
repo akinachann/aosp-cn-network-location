@@ -1,0 +1,77 @@
+#!/sbin/sh
+
+#################
+# Initialization
+#################
+
+umask 022
+
+# 此阶段 util_functions.sh 尚未加载，用 echo 代替 ui_print
+ui_print() { echo "$1"; }
+
+require_new_magisk() {
+  ui_print "*******************************"
+  ui_print " 请先安装 Magisk v20.4 及以上 "
+  ui_print " （APatch / KernelSU 请用管理器安装本模块）"
+  ui_print "*******************************"
+  exit 1
+}
+
+#########################
+# Load util_functions.sh
+#########################
+
+OUTFD=$2
+ZIPFILE=$3
+
+mount /data 2>/dev/null
+
+if [ -f /data/adb/magisk/util_functions.sh ]; then
+  . /data/adb/magisk/util_functions.sh
+  [ "${MAGISK_VER_CODE:-0}" -lt 20400 ] && require_new_magisk
+  install_module
+  exit 0
+fi
+
+##################################################
+# 无 Magisk：APatch / KernelSU / TWRP 等场景的兜底
+# （APatch / KernelSU 管理器通常自行处理 zip，
+#   这里是 recovery 手动刷入时使用的自包含安装）
+##################################################
+
+ui_print "- 未检测到 Magisk，使用自包含安装模式"
+
+TMPDIR=${TMPDIR:-/dev/tmp}/baidu_location
+rm -rf "$TMPDIR"
+mkdir -p "$TMPDIR"
+cd "$TMPDIR" || exit 1
+
+if command -v unzip >/dev/null 2>&1; then
+  unzip -o "$ZIPFILE" >/dev/null 2>&1
+else
+  busybox unzip -o "$ZIPFILE" >/dev/null 2>&1
+fi
+
+if [ ! -f module.prop ]; then
+  ui_print "! 解压失败，无法完成安装"
+  exit 1
+fi
+
+MODID=$(grep '^id=' module.prop | cut -d= -f2 | tr -d '\r')
+[ -z "$MODID" ] && MODID=baidu_network_location
+
+DEST="/data/adb/modules/$MODID"
+rm -rf "$DEST"
+mkdir -p "$DEST"
+cp -rf ./* "$DEST"/
+
+# 统一权限：目录 0755，文件 0644，APK 也保持 0644
+find "$DEST" -type d -exec chmod 0755 {} \;
+find "$DEST" -type f -exec chmod 0644 {} \;
+chmod 0755 "$DEST"
+
+rm -rf "$TMPDIR"
+
+ui_print "- 已写入 $DEST"
+ui_print "- 重启设备后生效"
+exit 0

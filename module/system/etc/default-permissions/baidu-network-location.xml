@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  百度网络定位默认运行时权限（Android 8.0+ 由 DefaultPermissionGrantPolicy 在开机时应用）
+  ACCESS_BACKGROUND_LOCATION 在 Android 11 / targetSdk 30 下属于 hard restricted 权限，
+  系统会拒绝自动授予（logcat: Cannot grant hard restricted non-exempt permission），
+  此时需要用户在「设置 → 应用 → 百度网络定位 → 权限 → 位置信息」里选择「始终允许」。
+-->
+<exceptions>
+    <exception package="com.baidu.map.location">
+        <permission name="android.permission.ACCESS_FINE_LOCATION" fixed="false" />
+        <permission name="android.permission.ACCESS_COARSE_LOCATION" fixed="false" />
+        <permission name="android.permission.ACCESS_BACKGROUND_LOCATION" fixed="false" />
+    </exception>
+</exceptions>
