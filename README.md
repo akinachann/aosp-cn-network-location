@@ -65,6 +65,10 @@ adb shell cmd location set-location-enabled true
 - 把 APK 放进 `priv-app` 并写 `privapp-permissions` 白名单，使其获得 `INSTALL_LOCATION_PROVIDER` 特权，可注册为网络定位提供者（**不重签 APK**）
 - 补 `lib/arm64`、`lib/arm` 的 `libnlocSDK7d.so`（Android 12+ 不再解压系统 APK 内的 `.so`）
 - 用 `default-permissions` + `service.sh` 兜底运行时定位权限
+- 每次开机自动校验权限：缺哪个补哪个（百度 SDK 缺 `WRITE_EXTERNAL_STORAGE` 会直接返回 `no permission`，一个请求都不发）
+- 模块被整体禁用（安全模式）后，系统会删掉这个预装应用及其数据；模块目录里留了一份应用数据快照，恢复后自动还原
+- 开机完成后若还没有网络位置，自动触发一次定位（绕过百度 SDK 丢弃开机后前 3 次系统请求的问题）
+- 模块「操作」按钮提供一键修复，无需重启
 - Android 11+ 的「后台定位」：预装应用没有安装来源，系统会把 `ACCESS_BACKGROUND_LOCATION` 判为受限权限，导致退到后台就读不到 WiFi / 基站。`service.sh` 会自动补安装来源并修正权限库，无需手动操作
 - 装了 microG 的设备上，自动禁用其自带的 fused / network 定位服务，让平台和 GMS 的定位都回落到百度
 

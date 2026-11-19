@@ -4,11 +4,16 @@
   ACCESS_BACKGROUND_LOCATION 在 Android 11 / targetSdk 30 下属于 hard restricted 权限，
   系统会拒绝自动授予（logcat: Cannot grant hard restricted non-exempt permission），
   此时需要用户在「设置 → 应用 → 百度网络定位 → 权限 → 位置信息」里选择「始终允许」。
+
+  WRITE_EXTERNAL_STORAGE 也必须授予：百度 SDK 的 NetworkLocationProvider 在每次
+  定位请求前会 checkSelfPermission(WRITE_EXTERNAL_STORAGE)，未授予就直接返回
+  「location failed by Baidu, reason:[no permission]」，完全不会发请求。
 -->
 <exceptions>
     <exception package="com.baidu.map.location">
         <permission name="android.permission.ACCESS_FINE_LOCATION" fixed="false" />
         <permission name="android.permission.ACCESS_COARSE_LOCATION" fixed="false" />
         <permission name="android.permission.ACCESS_BACKGROUND_LOCATION" fixed="false" />
+        <permission name="android.permission.WRITE_EXTERNAL_STORAGE" fixed="false" />
     </exception>
 </exceptions>
