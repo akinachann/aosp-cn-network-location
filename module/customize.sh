@@ -25,6 +25,37 @@ ui_print "*******************************"
 
 [ -f "$MODPATH/$APK_REL" ] || abort "! 模块内未找到 APK，压缩包可能已损坏"
 
+# APK 完整性检查：截断/空文件会让系统在启动该 App 进程时抛
+# java.lang.NullPointerException at ConfigurationController.updateLocaleListFromAppContext
+APK_SIZE=$(wc -c < "$MODPATH/$APK_REL" 2>/dev/null | tr -d ' ')
+case "$APK_SIZE" in
+  ''|*[!0-9]*) abort "! 无法读取 APK 大小，压缩包可能已损坏，请重新下载" ;;
+esac
+[ "$APK_SIZE" -gt 700000 ] || abort "! 模块内 APK 只有 $APK_SIZE 字节，压缩包不完整，请重新下载"
+
+# 同名包已存在时的处理。
+# 如果之前用普通 APK 装过同包名，PackageManager 会保留旧的 /data/app 路径，
+# 新挂载的 priv-app 会被忽略，App 进程启动时 Resources 为 null，直接 NPE 崩溃。
+if pm path com.baidu.map.location >/dev/null 2>&1; then
+  OLD_PATH=$(pm path com.baidu.map.location 2>/dev/null | head -1 | cut -d: -f2)
+  case "$OLD_PATH" in
+    /system/priv-app/BaiduNetworkLocation/*) : ;;
+    *)
+      ui_print "! 检测到已安装的同名包：$OLD_PATH"
+      ui_print "! 它会让系统继续使用旧路径，导致 App 启动即崩溃（Resources 为 null）"
+      ui_print "- 正在移除旧安装…"
+      pm uninstall --user 0 com.baidu.map.location >/dev/null 2>&1 \
+        || pm uninstall com.baidu.map.location >/dev/null 2>&1
+      if pm path com.baidu.map.location >/dev/null 2>&1; then
+        ui_print "! 自动移除失败"
+        ui_print "! 请先在系统设置里手动卸载 com.baidu.map.location，重启后再刷本模块"
+      else
+        ui_print "- 已移除旧安装，重启后由本模块提供"
+      fi
+      ;;
+  esac
+fi
+
 ui_print "- 安装位置：/system/priv-app/BaiduNetworkLocation/"
 ui_print "- 特权白名单：privapp-permissions-com.baidu.map.location.xml"
 

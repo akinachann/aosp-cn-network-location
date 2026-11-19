@@ -104,7 +104,7 @@ if [ -d "$DATA" ] && [ -d "$SNAP" ] && [ -z "$(ls -A "$DATA/shared_prefs" 2>/dev
 fi
 
 # 5) microG
-if pm path "$GMS" >/dev/null 2>&1; then
+if pm path "$GMS" >/dev/null 2>&1 && dumpsys package "$GMS" 2>/dev/null | grep -q "org\.microg\.gms"; then
   pm disable --user 0 "$GMS_FUSED" >/dev/null 2>&1
   pm disable --user 0 "$GMS_NLP" >/dev/null 2>&1
   pids=$(pidof "$GMS" 2>/dev/null)

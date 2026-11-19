@@ -50,6 +50,21 @@ while [ $i -lt 30 ]; do
   i=$((i + 1))
 done
 
+# APK 自检：模块挂载异常时这里的 APK 会不存在或为 0 字节，
+# 系统启动该 App 进程时会抛 NullPointerException（Resources 为 null）
+APK_PATH=$(pm path "$PKG" 2>/dev/null | head -1 | cut -d: -f2)
+if [ -z "$APK_PATH" ]; then
+  log "WARN: package not installed (module mount failed?)"
+elif [ ! -r "$APK_PATH" ]; then
+  log "WARN: APK not readable: $APK_PATH"
+else
+  SZ=$(wc -c < "$APK_PATH" 2>/dev/null | tr -d ' ')
+  case "$SZ" in
+    ''|*[!0-9]*) log "WARN: cannot read APK size: $APK_PATH" ;;
+    *) [ "$SZ" -gt 700000 ] || log "WARN: APK truncated ($SZ bytes): $APK_PATH" ;;
+  esac
+fi
+
 pm grant "$PKG" android.permission.ACCESS_FINE_LOCATION >/dev/null 2>&1
 pm grant "$PKG" android.permission.ACCESS_COARSE_LOCATION >/dev/null 2>&1
 # 百度 SDK 每次定位前都会检查这个权限，缺了就直接报 no permission，一个请求都不发。
@@ -167,9 +182,10 @@ refresh_snapshot() {
   log "appdata snapshot refreshed"
 }
 
-# 3) 4) 只对装了 microG 的设备有意义，GMS / 无 GMS 设备会自动跳过。
+# 3) 4) 只对装了 microG 的设备有意义。
 #    注意：必须用 pm disable，pm disable-user 在部分 ROM（LineageOS / Android 17）上会静默失败。
-if pm path "$GMS" >/dev/null 2>&1; then
+#    GMS（PixelOS 等）上没有这两个组件，也不要去 kill 它的进程。
+if pm path "$GMS" >/dev/null 2>&1 && dumpsys package "$GMS" 2>/dev/null | grep -q "org\.microg\.gms"; then
   pm disable --user 0 "$GMS_FUSED" >/dev/null 2>&1
   pm disable --user 0 "$GMS_NLP" >/dev/null 2>&1
 
